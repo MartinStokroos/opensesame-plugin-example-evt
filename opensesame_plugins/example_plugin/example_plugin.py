@@ -1,5 +1,10 @@
 #-*- coding:utf-8 -*-
 
+"""
+No rights reserved. All files in this repository are released into the public
+domain.
+"""
+
 from libopensesame.py3compat import *
 from libopensesame.item import item
 from libqtopensesame.items.qtautoplugin import qtautoplugin

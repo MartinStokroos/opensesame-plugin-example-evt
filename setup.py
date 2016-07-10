@@ -2,7 +2,7 @@
 #-*- coding:utf-8 -*-
 
 """
-No rights reversed. All files in this repository are released into the public
+No rights reserved. All files in this repository are released into the public
 domain.
 """
 
