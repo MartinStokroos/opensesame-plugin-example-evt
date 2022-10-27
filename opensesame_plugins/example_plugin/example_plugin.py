@@ -1,5 +1,4 @@
 #-*- coding:utf-8 -*-
-
 """
 No rights reserved. All files in this repository are released into the public
 domain.
@@ -10,98 +9,83 @@ from libopensesame.item import item
 from libqtopensesame.items.qtautoplugin import qtautoplugin
 from openexp.canvas import canvas
 
+
 class example_plugin(item):
+    """This class (the class with the same name as the module) handles the
+    basic functionality of the item. It does not deal with GUI stuff.
+    """
 
-	"""
-	This class (the class with the same name as the module) handles the basic
-	functionality of the item. It does not deal with GUI stuff.
-	"""
+    # Provide an informative description for your plug-in.
+    description = 'An example new-style plug-in'
 
-	# Provide an informative description for your plug-in.
-	description = u'An example new-style plug-in'
+    def reset(self):
+        """Resets plug-in to initial values."""
+        # Here we provide default values for the variables that are specified
+        # in info.json. If you do not provide default values, the plug-in will
+        # work, but the variables will be undefined when they are not explicitly
+        # set in the GUI.
+        self.var._checkbox = 'yes' # yes = checked, no = unchecked
+        self.var._color = 'white'
+        self.var._option = 'Option 1'
+        self.var._file = ''
+        self.var._text = 'Default text'
+        self.var._spinbox_value = 1
+        self.var._slider_value = 1
+        self.var._script = 'print(10)'
 
-	def reset(self):
+    def prepare(self):
+        """The preparation phase of the plug-in goes here."""
+        # Call the parent constructor.
+        item.prepare(self)
+        # Here simply prepare a canvas with a fixatio dot.
+        self.c = canvas(self.experiment)
+        self.c.fixdot()
 
-		"""
-		desc:
-			Resets plug-in to initial values.
-		"""
+    def run(self):
+        """The run phase of the plug-in goes here."""
+        # self.set_item_onset() sets the time_[item name] variable. Optionally,
+        # you can pass a timestamp, such as returned by canvas.show().
+        self.set_item_onset(self.c.show())
 
-		# Here we provide default values for the variables that are specified
-		# in info.json. If you do not provide default values, the plug-in will
-		# work, but the variables will be undefined when they are not explicitly
-		# set in the GUI.
-		self.var._checkbox = u'yes' # yes = checked, no = unchecked
-		self.var._color = u'white'
-		self.var._option = u'Option 1'
-		self.var._file = u''
-		self.var._text = u'Default text'
-		self.var._spinbox_value = 1
-		self.var._slider_value = 1
-		self.var._script = u'print(10)'
-
-	def prepare(self):
-
-		"""The preparation phase of the plug-in goes here."""
-
-		# Call the parent constructor.
-		item.prepare(self)
-		# Here simply prepare a canvas with a fixatio dot.
-		self.c = canvas(self.experiment)
-		self.c.fixdot()
-
-	def run(self):
-
-		"""The run phase of the plug-in goes here."""
-
-		# self.set_item_onset() sets the time_[item name] variable. Optionally,
-		# you can pass a timestamp, such as returned by canvas.show().
-		self.set_item_onset(self.c.show())
 
 class qtexample_plugin(example_plugin, qtautoplugin):
+    """This class handles the GUI aspect of the plug-in. By using qtautoplugin,
+    we usually need to do hardly anything, because the GUI is defined in
+    info.json.
+    """
+    
+    def __init__(self, name, experiment, script=None):
 
-	"""
-	This class handles the GUI aspect of the plug-in. By using qtautoplugin, we
-	usually need to do hardly anything, because the GUI is defined in info.json.
-	"""
+        """Constructor.
 
-	def __init__(self, name, experiment, script=None):
+        Arguments:
+        name       -- The name of the plug-in.
+        experiment -- The experiment object.
 
-		"""
-		Constructor.
+        Keyword arguments:
+        script     -- A definition script. (default=None)
+        """
+        # We don't need to do anything here, except call the parent
+        # constructors.
+        example_plugin.__init__(self, name, experiment, script)
+        qtautoplugin.__init__(self, __file__)
 
-		Arguments:
-		name		--	The name of the plug-in.
-		experiment	--	The experiment object.
-
-		Keyword arguments:
-		script		--	A definition script. (default=None)
-		"""
-
-		# We don't need to do anything here, except call the parent
-		# constructors.
-		example_plugin.__init__(self, name, experiment, script)
-		qtautoplugin.__init__(self, __file__)
-
-	def init_edit_widget(self):
-
-		"""
-		Constructs the GUI controls. Usually, you can omit this function
-		altogether, but if you want to implement more advanced functionality,
-		such as controls that are grayed out under certain conditions, you need
-		to implement this here.
-		"""
-
-		# First, call the parent constructor, which constructs the GUI controls
-		# based on info.json.
-		qtautoplugin.init_edit_widget(self)
-		# If you specify a 'name' for a control in info.json, this control will
-		# be available self.[name]. The type of the object depends on the
-		# control. A checkbox will be a QCheckBox, a line_edit will be a
-		# QLineEdit. Here we connect the stateChanged signal of the QCheckBox,
-		# to the setEnabled() slot of the QLineEdit. This has the effect of
-		# disabling the QLineEdit when the QCheckBox is uncheckhed. We also
-		# explictly set the starting state.
-		self.line_edit_widget.setEnabled(self.checkbox_widget.isChecked())
-		self.checkbox_widget.stateChanged.connect(
-			self.line_edit_widget.setEnabled)
+    def init_edit_widget(self):
+        """Constructs the GUI controls. Usually, you can omit this function
+        altogether, but if you want to implement more advanced functionality,
+        such as controls that are grayed out under certain conditions, you need
+        to implement this here.
+        """
+        # First, call the parent constructor, which constructs the GUI controls
+        # based on info.json.
+        qtautoplugin.init_edit_widget(self)
+        # If you specify a 'name' for a control in info.json, this control will
+        # be available self.[name]. The type of the object depends on the
+        # control. A checkbox will be a QCheckBox, a line_edit will be a
+        # QLineEdit. Here we connect the stateChanged signal of the QCheckBox,
+        # to the setEnabled() slot of the QLineEdit. This has the effect of
+        # disabling the QLineEdit when the QCheckBox is uncheckhed. We also
+        # explictly set the starting state.
+        self.line_edit_widget.setEnabled(self.checkbox_widget.isChecked())
+        self.checkbox_widget.stateChanged.connect(
+            self.line_edit_widget.setEnabled)
