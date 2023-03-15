@@ -19,8 +19,8 @@ class ExamplePlugin(Item):
     def reset(self):
         """Resets plug-in to initial values."""
         # Here we provide default values for the variables that are specified
-        # in info.json. If you do not provide default values, the plug-in will
-        # work, but the variables will be undefined when they are not
+        # in __init__.py. If you do not provide default values, the plug-in
+        # will work, but the variables will be undefined when they are not
         # explicitly # set in the GUI.
         self.var.checkbox = 'yes'  # yes = checked, no = unchecked
         self.var.color = 'white'
