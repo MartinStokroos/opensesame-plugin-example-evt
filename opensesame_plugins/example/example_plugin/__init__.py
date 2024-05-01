@@ -1,10 +1,25 @@
-"""A docstring with a description of the plugin"""
+"""An example plugin to demonstrate the connection with EVT hardware"""
 
 # The category determines the group for the plugin in the item toolbar
-category = "Visual stimuli"
+category = "RUG/BSS hardware"
 # Defines the GUI controls
 controls = [
     {
+        "type": "combobox",
+        "var": "device",
+        "label": "Select device :",
+        "options": [
+            "DUMMY"
+        ],
+        "name": "device_combobox",
+        "tooltip": "Select the desired EVT-device or DUMMY."
+    }, {
+        "type": "checkbox",
+        "var": "refresh",
+        "label": "Refresh device list",
+        "name": "refresh_checkbox",
+        "tooltip": "Refresch device list checkbox"
+    }, {   
         "type": "checkbox",
         "var": "checkbox",
         "label": "Example checkbox",

@@ -1,12 +1,19 @@
 """
 No rights reserved. All files in this repository are released into the public
 domain.
+
+This example shows how to attach EventExchanger (EVT-2) devices to the plugin.
+
+Author: M. Stokroos
+Date: May 2024
 """
 
 from libopensesame.py3compat import *
 from libopensesame.item import Item
 from libqtopensesame.items.qtautoplugin import QtAutoPlugin
 from openexp.canvas import Canvas
+from libopensesame.oslogging import oslogger
+from pyevt import EventExchanger # pyevt 2.0
 
 
 class ExamplePlugin(Item):
@@ -16,12 +23,17 @@ class ExamplePlugin(Item):
     .py file (which is a Python module) are called example_plugin, whereas
     the class is called ExamplePlugin.
     """
+    
+    description = u"A plug-in to demonstrate the control on EVT-2 devices."
+    
     def reset(self):
         """Resets plug-in to initial values."""
         # Here we provide default values for the variables that are specified
         # in __init__.py. If you do not provide default values, the plug-in
         # will work, but the variables will be undefined when they are not
         # explicitly # set in the GUI.
+        self.var.device = u'DUMMY'
+        self.var.refresh = 'no'
         self.var.checkbox = 'yes'  # yes = checked, no = unchecked
         self.var.color = 'white'
         self.var.option = 'Option 1'
@@ -35,15 +47,24 @@ class ExamplePlugin(Item):
         """The preparation phase of the plug-in goes here."""
         # Call the parent constructor.
         super().prepare()
-        # Here simply prepare a canvas with a fixatio dot.
-        self.c = Canvas(self.experiment)
-        self.c.fixdot()
+        # Here simply open the EVT device
+        self.myevt = EventExchanger()
+        if self.var.device != u'DUMMY':
+            # Dynamically load an EVT device
+            try:
+                self.myevt.attach(self.var.device[0:15])
+                oslogger.info("EVT-device connected.")
+            except:
+                self.var.device = u'DUMMY'
+                oslogger.warning("Connecting EVT device failed! Switching to dummy-mode.")
 
     def run(self):
         """The run phase of the plug-in goes here."""
-        # self.set_item_onset() sets the time_[item name] variable. Optionally,
-        # you can pass a timestamp, such as returned by canvas.show().
-        self.set_item_onset(self.c.show())
+        # Do your thing with EVT here.
+        self.myevt.write_lines(0) # clear lines
+        self.myevt.pulse_lines(170, 1000) # value=170, duration=1s, non-blocking!
+        clock.sleep(2000) # clock is not defined here?
+        self.myevt.pulse_lines(85, 1000) # value=170, duration=1s
 
 
 class QtExamplePlugin(ExamplePlugin, QtAutoPlugin):
@@ -71,13 +92,29 @@ class QtExamplePlugin(ExamplePlugin, QtAutoPlugin):
         # First, call the parent constructor, which constructs the GUI controls
         # based on __init_.py.
         super().init_edit_widget()
-        # If you specify a 'name' for a control in __init__.py, this control
-        # will be available self.[name]. The type of the object depends on
-        # the control. A checkbox will be a QCheckBox, a line_edit will be a
-        # QLineEdit. Here we connect the stateChanged signal of the QCheckBox,
-        # to the setEnabled() slot of the QLineEdit. This has the effect of
-        # disabling the QLineEdit when the QCheckBox is uncheckhed. We also
-        # explictly set the starting state.
-        self.line_edit_widget.setEnabled(self.checkbox_widget.isChecked())
-        self.checkbox_widget.stateChanged.connect(
-            self.line_edit_widget.setEnabled)
+        
+        self.myevt = EventExchanger()
+        list_of_devices = self.myevt.scan(u"EventExchanger")
+        if list_of_devices:
+            for i in list_of_devices:
+                self.device_combobox.addItem(i)
+        # Prevents hangup if the same device is not found after reopening the project:
+        if not self.var.device in list_of_devices: 
+            self.var.device = u'DUMMY'
+
+        # event based calls:
+        self.refresh_checkbox.stateChanged.connect(self.refresh_combobox_device)
+        self.device_combobox.currentIndexChanged.connect(self.update_combobox_device)
+
+    def refresh_combobox_device(self):
+        if self.refresh_checkbox.isChecked():
+            self.device_combobox.clear()
+            # create new list:
+            self.device_combobox.addItem(u'DUMMY', userData=None)
+            list_of_devices = self.myevt.scan(u"EventExchanger")
+            if list_of_devices:
+                for i in list_of_devices:
+                    self.device_combobox.addItem(i)
+
+    def update_combobox_device(self):
+        self.refresh_checkbox.setChecked(False)
