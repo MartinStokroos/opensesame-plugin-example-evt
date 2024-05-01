@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "opensesame-plugin-example"
+name = "opensesame-plugin-example-evt"
 version = "0.0.1"
-description = "An example plugin for OpenSesame"
-authors = ["Sebastiaan Mathôt <s.mathot@cogsci.nl>"]
+description = "An example plugin for OpenSesame and the use of EVT hardware"
+authors = ["Sebastiaan Mathôt <s.mathot@cogsci.nl>", "Martin Stokroos <m.stokroos@rug.nl>"]
 readme = "readme.md"
 packages = [
     {include = "opensesame_plugins"},
