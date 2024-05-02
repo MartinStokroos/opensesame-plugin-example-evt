@@ -24,7 +24,7 @@ class ExamplePluginEvt(Item):
     the class is called ExamplePlugin.
     """
     
-    description = u"A plug-in to demonstrate the control on EVT-2 devices."
+    description = u"A plug-in to demonstrate the control of EVT-2 devices."
     
     def reset(self):
         """Resets plug-in to initial values."""
@@ -32,7 +32,7 @@ class ExamplePluginEvt(Item):
         # in __init__.py. If you do not provide default values, the plug-in
         # will work, but the variables will be undefined when they are not
         # explicitly # set in the GUI.
-        self.var.device = u'DUMMY'
+        self.var.device = u'0: DUMMY'
         self.var.refresh = 'no'
         self.var.checkbox = 'yes'  # yes = checked, no = unchecked
         self.var.color = 'white'
@@ -47,16 +47,27 @@ class ExamplePluginEvt(Item):
         """The preparation phase of the plug-in goes here."""
         # Call the parent constructor.
         super().prepare()
-        # Here simply open the EVT device
+        # Here open the EVT device
         self.myevt = EventExchanger()
-        if self.var.device != u'DUMMY':
-            # Dynamically load an EVT device
-            try:
-                self.myevt.attach(self.var.device[0:15])
-                oslogger.info("EVT-device connected.")
-            except:
-                self.var.device = u'DUMMY'
-                oslogger.warning("Connecting EVT device failed! Switching to dummy-mode.")
+
+        # Dynamically load an EVT device
+        try:
+            # self.myevt.attach(self.var.device[0:15])
+            device_list = self.myevt.scan()
+        except:
+            oslogger.warning("Connecting EVT device failed!")
+
+        d_count = 1
+        for d in device_list:
+            if int(self.var.device[:1]) == 0:
+                self.var.device = u'0: DUMMY'
+                oslogger.warning("Dummy mode.")
+                break
+            elif int(self.var.device[:1]) == d_count: 
+                self.myevt.attach_id(d['path'])
+                oslogger.info('Device successfully attached as: {}'.format(d['product_string']))
+                break
+            d_count += 1
 
     def run(self):
         """The run phase of the plug-in goes here."""
@@ -65,6 +76,7 @@ class ExamplePluginEvt(Item):
         self.myevt.pulse_lines(170, 1000) # value=170, duration=1s, non-blocking!
         #clock.sleep(2000) # clock is not defined here?
         #self.myevt.pulse_lines(85, 1000) # value=170, duration=1s
+        self.myevt.close()
 
 
 class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
@@ -92,15 +104,11 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
         # First, call the parent constructor, which constructs the GUI controls
         # based on __init_.py.
         super().init_edit_widget()
-        
         self.myevt = EventExchanger()
-        list_of_devices = self.myevt.scan(u"EventExchanger")
-        if list_of_devices:
-            for i in list_of_devices:
-                self.device_combobox.addItem(i)
-        # Prevents hangup if the same device is not found after reopening the project:
-        if not self.var.device in list_of_devices: 
-            self.var.device = u'DUMMY'
+        self.combobox_add_devices()
+        # Prevents hangup if the same device is not found after re-opening the project:
+        if not self.var.device in self.device_list: 
+            self.var.device = u'0: DUMMY'
 
         # event based calls:
         self.refresh_checkbox.stateChanged.connect(self.refresh_combobox_device)
@@ -108,13 +116,24 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
 
     def refresh_combobox_device(self):
         if self.refresh_checkbox.isChecked():
-            self.device_combobox.clear()
-            # create new list:
-            self.device_combobox.addItem(u'DUMMY', userData=None)
-            list_of_devices = self.myevt.scan(u"EventExchanger")
-            if list_of_devices:
-                for i in list_of_devices:
-                    self.device_combobox.addItem(i)
+            # renew list:
+            self.combobox_add_devices()
 
     def update_combobox_device(self):
         self.refresh_checkbox.setChecked(False)
+        
+    def combobox_add_devices(self):
+        self.device_combobox.clear()
+        self.device_combobox.addItem(u'0: DUMMY', userData=None)
+        self.device_list = self.myevt.scan() # Default scans for all 'EventExchanger' devices.
+        if self.device_list:
+            d_count = 1
+            for d in self.device_list:
+                product_string = d['product_string']
+                # add string to combobox:
+                self.device_combobox.addItem(str(d_count) + ": " + product_string[15:])
+                d_count += 1
+                if d_count > 9:
+                    break
+        else:
+            self.var.device = u'0: DUMMY'
