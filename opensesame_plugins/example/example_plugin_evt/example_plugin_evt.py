@@ -16,7 +16,7 @@ from libopensesame.oslogging import oslogger
 from pyevt import EventExchanger # pyevt 2.0
 
 
-class ExamplePlugin(Item):
+class ExamplePluginEvt(Item):
     """An example plugin that shows a simple canvas. The class name
     should be the CamelCase version of the folder_name and file_name. So in
     this case both the plugin folder (which is a Python package) and the
@@ -63,11 +63,11 @@ class ExamplePlugin(Item):
         # Do your thing with EVT here.
         self.myevt.write_lines(0) # clear lines
         self.myevt.pulse_lines(170, 1000) # value=170, duration=1s, non-blocking!
-        clock.sleep(2000) # clock is not defined here?
-        self.myevt.pulse_lines(85, 1000) # value=170, duration=1s
+        #clock.sleep(2000) # clock is not defined here?
+        #self.myevt.pulse_lines(85, 1000) # value=170, duration=1s
 
 
-class QtExamplePlugin(ExamplePlugin, QtAutoPlugin):
+class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
     """This class handles the GUI aspect of the plug-in. The name should be the
     same as that of the runtime class with the added prefix Qt.
     
@@ -80,7 +80,7 @@ class QtExamplePlugin(ExamplePlugin, QtAutoPlugin):
         # We don't need to do anything here, except call the parent
         # constructors. Since the parent constructures take different arguments
         # we cannot use super().
-        ExamplePlugin.__init__(self, name, experiment, script)
+        ExamplePluginEvt.__init__(self, name, experiment, script)
         QtAutoPlugin.__init__(self, __file__)
 
     def init_edit_widget(self):

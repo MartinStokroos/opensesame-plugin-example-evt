@@ -1,4 +1,4 @@
-"""An example plugin to demonstrate the connection with EVT hardware"""
+"""An example plugin to demonstrate the connection to EVT hardware"""
 
 # The category determines the group for the plugin in the item toolbar
 category = "RUG/BSS hardware"
