@@ -47,16 +47,16 @@ class ExamplePluginEvt(Item):
         """The preparation phase of the plug-in goes here."""
         # Call the parent constructor.
         super().prepare()
-        # Here open the EVT device
+        
+        # Create the EVT device handle
         self.myevt = EventExchanger()
-
-        # Dynamically load an EVT device
         try:
             device_list = self.myevt.scan()
         except:
             oslogger.warning("Connecting EVT device failed!")
+
         # Create a shadow device list below, to find 'path' from the selected device.
-        # 'path' is the unique device ID.
+        # 'path' is an unique device ID.
         d_count = 1
         for d in device_list:
             if int(self.var.device[:1]) == 0:
@@ -64,6 +64,7 @@ class ExamplePluginEvt(Item):
                 oslogger.warning("Dummy mode.")
                 break
             elif int(self.var.device[:1]) == d_count: 
+                # Dynamically load an EVT device
                 self.myevt.attach_id(d['path'])
                 oslogger.info('Device successfully attached as:{} s/n:{}'.format(
                     d['product_string'], d['serial_number']))
@@ -103,13 +104,12 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
         # First, call the parent constructor, which constructs the GUI controls
         # based on __init_.py.
         super().init_edit_widget()
+
+        # Create the EVT device handle
         self.myevt = EventExchanger()
         self.combobox_add_devices()
-        # Prevents hangup if the same device is not found after re-opening the project:
-        if not self.var.device in self.device_list: 
-            self.var.device = u'0: DUMMY'
 
-        # event based calls:
+        # Event triggered calls:
         self.refresh_checkbox.stateChanged.connect(self.refresh_combobox_device)
         self.device_combobox.currentIndexChanged.connect(self.update_combobox_device)
 
@@ -125,16 +125,25 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
         self.device_combobox.clear()
         self.device_combobox.addItem(u'0: DUMMY', userData=None)
         self.device_list = self.myevt.scan() # Default scans for all 'EventExchanger' devices.
+        old_device_found = False
         if self.device_list:
             d_count = 1
             for d in self.device_list:
                 product_string = d['product_string']
-                serial_number_string = d['serial_number']
+                serial_string = d['serial_number']
                 # add string to combobox:
                 self.device_combobox.addItem(str(d_count) + ": " + \
-                    product_string[15:] + " s/n:" + serial_number_string)
+                    product_string[15:] + " s/n: " + serial_string)
+                if self.var.device[3:28] in d['product_string']:
+                    old_device_found = True
                 d_count += 1
                 if d_count > 9:
+                    # keep number of digits to 1
                     break
         else:
+            self.var.device = u'0: DUMMY'
+        
+        # Prevents hangup if the same device is not found after reopening the project.
+        # Any change in the hardware configuration could cause this.
+        if not old_device_found:
             self.var.device = u'0: DUMMY'
