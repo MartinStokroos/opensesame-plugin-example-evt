@@ -128,8 +128,10 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
             d_count = 1
             for d in self.device_list:
                 product_string = d['product_string']
+                serial_number_string = d['serial_number']
                 # add string to combobox:
-                self.device_combobox.addItem(str(d_count) + ": " + product_string[15:])
+                self.device_combobox.addItem(str(d_count) + ": " + \
+                    product_string[15:] + " s/n:" + serial_number_string)
                 d_count += 1
                 if d_count > 9:
                     break
