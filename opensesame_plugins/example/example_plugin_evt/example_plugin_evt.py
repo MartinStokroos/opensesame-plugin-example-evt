@@ -65,7 +65,8 @@ class ExamplePluginEvt(Item):
                 break
             elif int(self.var.device[:1]) == d_count: 
                 self.myevt.attach_id(d['path'])
-                oslogger.info('Device successfully attached as: {}'.format(d['product_string']))
+                oslogger.info('Device successfully attached as:{} s/n:{}'.format(
+                    d['product_string'], d['serial_number']))
                 break
             d_count += 1
 
