@@ -55,8 +55,8 @@ class ExamplePluginEvt(Item):
             device_list = self.myevt.scan()
         except:
             oslogger.warning("Connecting EVT device failed!")
-        # Create a shadow device list here below to find 'path' from the selected device.
-        # 'path' is a unique device ID.
+        # Create a shadow device list below, to find 'path' from the selected device.
+        # 'path' is the unique device ID.
         d_count = 1
         for d in device_list:
             if int(self.var.device[:1]) == 0:
