@@ -52,11 +52,11 @@ class ExamplePluginEvt(Item):
 
         # Dynamically load an EVT device
         try:
-            # self.myevt.attach(self.var.device[0:15])
             device_list = self.myevt.scan()
         except:
             oslogger.warning("Connecting EVT device failed!")
-
+        # Create a shadow device list here below to find 'path' from the selected device.
+        # 'path' is a unique device ID.
         d_count = 1
         for d in device_list:
             if int(self.var.device[:1]) == 0:
@@ -74,8 +74,6 @@ class ExamplePluginEvt(Item):
         # Do your thing with EVT here.
         self.myevt.write_lines(0) # clear lines
         self.myevt.pulse_lines(170, 1000) # value=170, duration=1s, non-blocking!
-        #clock.sleep(2000) # clock is not defined here?
-        #self.myevt.pulse_lines(85, 1000) # value=170, duration=1s
         self.myevt.close()
 
 

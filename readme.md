@@ -1,6 +1,8 @@
-# OpenSesame example plugin
+# OpenSesame example plugin including EVT-device connection
 
 ## About
+
+EVT- or EventExchanger-devices are used for the purpose of event-triggering and event-marking and were developed by the Research Support group of the faculty of Behavioral and Social Science from the University of Groningen.
 
 This is an example plugin for OpenSesame 4.0 or later. For more information about creating OpenSesame extensions, see the OpenSesame documentation site:
 
@@ -11,6 +13,16 @@ You can package the extension as a `.whl` using [Poetry](https://python-poetry.o
 ```
 poetry build
 ```
+
+## Dependencies
+
+Install pyevt with:
+
+`pip install pyevt` or
+`pip install --user pyevt` on managed computers.
+
+Note: Currently use the latest python module in the development branch from the pyevt repository:
+![https://github.com/MartinStokroos/pyevt/tree/develop](https://github.com/MartinStokroos/pyevt/tree/develop)
 
 ## License
 
