@@ -21,7 +21,8 @@ Install pyevt with:
 `pip install pyevt` or
 `pip install --user pyevt` on managed computers.
 
-Note: Currently use the latest python module in the development branch from the pyevt repository:
+**Note:** For now, use the latest python module from the 'develop' branch from the pyevt repository:
+
 ![https://github.com/MartinStokroos/pyevt/tree/develop](https://github.com/MartinStokroos/pyevt/tree/develop)
 
 ## License
