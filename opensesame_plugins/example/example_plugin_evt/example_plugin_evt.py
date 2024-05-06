@@ -47,6 +47,8 @@ class ExamplePluginEvt(Item):
         """The preparation phase of the plug-in goes here."""
         # Call the parent constructor.
         super().prepare()
+
+        self.open_devices = {}
         
         # Create the EVT device handle
         self.myevt = EventExchanger()
@@ -68,8 +70,10 @@ class ExamplePluginEvt(Item):
                 self.myevt.attach_id(d['path'])
                 oslogger.info('Device successfully attached as:{} s/n:{}'.format(
                     d['product_string'], d['serial_number']))
+                self.open_devices[d_count] = self.myevt
                 break
             d_count += 1
+        oslogger.info('open devices: {}'.format(self.open_devices))
 
     def run(self):
         """The run phase of the plug-in goes here."""
