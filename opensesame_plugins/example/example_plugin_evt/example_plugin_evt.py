@@ -15,6 +15,9 @@ from openexp.canvas import Canvas
 from libopensesame.oslogging import oslogger
 from pyevt import EventExchanger # pyevt 2.0
 
+# global var
+open_devices = {} # Store open device handles.
+
 
 class ExamplePluginEvt(Item):
     """An example plugin that shows a simple canvas. The class name
@@ -25,7 +28,9 @@ class ExamplePluginEvt(Item):
     """
     
     description = u"A plug-in to demonstrate the control of EVT-2 devices."
-    
+
+    global open_devices
+
     def reset(self):
         """Resets plug-in to initial values."""
         # Here we provide default values for the variables that are specified
@@ -48,39 +53,40 @@ class ExamplePluginEvt(Item):
         # Call the parent constructor.
         super().prepare()
 
-        self.open_devices = {}
-        
-        # Create the EVT device handle
-        self.myevt = EventExchanger()
-        try:
-            device_list = self.myevt.scan()
-        except:
-            oslogger.warning("Connecting EVT device failed!")
+        if int(self.var.device[:1]) == 0:
+            oslogger.warning("Dummy prepare")
+        else:
+            # Create a shadow device list to find 'path' from the current selected device.
+            # 'path' is an unique device ID.
+            myevt = EventExchanger()
+            try:
+                device_list = myevt.scan('EVT') # filter on EVT types
+                del myevt
+            except:
+                oslogger.warning("Connecting EVT device failed!")
 
-        # Create a shadow device list below, to find 'path' from the selected device.
-        # 'path' is an unique device ID.
-        d_count = 1
-        for d in device_list:
-            if int(self.var.device[:1]) == 0:
-                self.var.device = u'0: DUMMY'
-                oslogger.warning("Dummy mode.")
-                break
-            elif int(self.var.device[:1]) == d_count: 
-                # Dynamically load an EVT device
-                self.myevt.attach_id(d['path'])
-                oslogger.info('Device successfully attached as:{} s/n:{}'.format(
-                    d['product_string'], d['serial_number']))
-                self.open_devices[d_count] = self.myevt
-                break
-            d_count += 1
-        oslogger.info('open devices: {}'.format(self.open_devices))
+            d_count = 1            
+            for d in device_list:
+                if not d_count in open_devices:
+                    # Dynamically load all EVT devices from the list
+                    open_devices[d_count] = EventExchanger()
+                    open_devices[d_count].attach_id(d['path']) # Get evt device handle
+                    oslogger.info('Device successfully attached as:{} s/n:{}'.format(
+                        d['product_string'], d['serial_number']))
+                d_count += 1
+            # oslogger.info('open devices: {}'.format(open_devices))
+            self.current_device = int(self.var.device[:1])
 
     def run(self):
         """The run phase of the plug-in goes here."""
-        # Do your thing with EVT here.
-        self.myevt.write_lines(0) # clear lines
-        self.myevt.pulse_lines(170, 1000) # value=170, duration=1s, non-blocking!
-        self.myevt.close()
+        if self.var.device == u'0: DUMMY':
+            oslogger.info('Dummy run')
+        else:
+            # Do your thing with EVT here.
+            # oslogger.info('Run: current device: {}'.format(self.current_device))
+            open_devices[self.current_device].write_lines(0) # clear lines
+            open_devices[self.current_device].pulse_lines(170, 1000) # value=170, duration=1s, non-blocking!
+            # open_devices[self.current_device].close()
 
 
 class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
@@ -91,7 +97,7 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
     to implement non-standard interfaces or interactions. In this case, we use
     the GUI class to dynamically enable/ disable some controls (see below).
     """
-    
+
     def __init__(self, name, experiment, script=None):
         # We don't need to do anything here, except call the parent
         # constructors. Since the parent constructures take different arguments
@@ -109,9 +115,7 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
         # based on __init_.py.
         super().init_edit_widget()
 
-        # Create the EVT device handle
-        self.myevt = EventExchanger()
-        self.combobox_add_devices()
+        self.combobox_add_devices() # fill the combobox
 
         # Event triggered calls:
         self.refresh_checkbox.stateChanged.connect(self.refresh_combobox_device)
@@ -128,11 +132,18 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
     def combobox_add_devices(self):
         self.device_combobox.clear()
         self.device_combobox.addItem(u'0: DUMMY', userData=None)
-        self.device_list = self.myevt.scan() # Default scans for all 'EventExchanger' devices.
+        # Create the EVT device list
+        myevt = EventExchanger()
+        try:
+            device_list = myevt.scan('EVT') # filter on EVT types
+            del myevt
+        except:
+            device_list = None
+
         old_device_found = False
-        if self.device_list:
+        if device_list is not None:
             d_count = 1
-            for d in self.device_list:
+            for d in device_list:
                 product_string = d['product_string']
                 serial_string = d['serial_number']
                 # add string to combobox:
