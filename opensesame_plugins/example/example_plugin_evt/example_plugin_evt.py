@@ -13,7 +13,11 @@ from libopensesame.item import Item
 from libqtopensesame.items.qtautoplugin import QtAutoPlugin
 from openexp.canvas import Canvas
 from libopensesame.oslogging import oslogger
+from time import sleep
 from pyevt import EventExchanger # pyevt 2.0
+
+# constant
+_DEVICE_GROUP = u'EVT'
 
 # global var
 open_devices = {} # Store open device handles.
@@ -59,23 +63,31 @@ class ExamplePluginEvt(Item):
             # Create a shadow device list to find 'path' from the current selected device.
             # 'path' is an unique device ID.
             myevt = EventExchanger()
+            sleep(0.1) # without a delay, the list will not always be complete.
             try:
-                device_list = myevt.scan('EVT') # filter on EVT types
+                device_list = myevt.scan(_DEVICE_GROUP) # filter on allowed EVT types
                 del myevt
+                # oslogger.info("device list: {}".format(device_list))
             except:
                 oslogger.warning("Connecting EVT device failed!")
 
-            d_count = 1            
-            for d in device_list:
-                if not d_count in open_devices:
-                    # Dynamically load all EVT devices from the list
-                    open_devices[d_count] = EventExchanger()
-                    open_devices[d_count].attach_id(d['path']) # Get evt device handle
-                    oslogger.info('Device successfully attached as:{} s/n:{}'.format(
-                        d['product_string'], d['serial_number']))
-                d_count += 1
-            # oslogger.info('open devices: {}'.format(open_devices))
-            self.current_device = int(self.var.device[:1])
+            try:
+                d_count = 1            
+                for d in device_list:
+                    if not d_count in open_devices: # skip if already open
+                        # Dynamically load all EVT devices from the list
+                        open_devices[d_count] = EventExchanger()
+                        open_devices[d_count].attach_id(d['path']) # Get evt device handle
+                        oslogger.info('Device successfully attached as:{} s/n:{}'.format(
+                            d['product_string'], d['serial_number']))
+                    d_count += 1
+                oslogger.info('open devices: {}'.format(open_devices))
+                self.current_device = int(self.var.device[:1])
+                oslogger.info('Prepare - current device: {}'.format(self.current_device))
+                open_devices[self.current_device].write_lines(0) # clear lines
+            except:
+                self.var.device = u'0: DUMMY'
+                oslogger.warning("No device found! Switching to dummy.")
 
     def run(self):
         """The run phase of the plug-in goes here."""
@@ -83,10 +95,9 @@ class ExamplePluginEvt(Item):
             oslogger.info('Dummy run')
         else:
             # Do your thing with EVT here.
-            # oslogger.info('Run: current device: {}'.format(self.current_device))
-            open_devices[self.current_device].write_lines(0) # clear lines
             open_devices[self.current_device].pulse_lines(170, 1000) # value=170, duration=1s, non-blocking!
             # open_devices[self.current_device].close()
+            # Not closing device, because more instances of this plugin might run.
 
 
 class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
@@ -115,7 +126,7 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
         # based on __init_.py.
         super().init_edit_widget()
 
-        self.combobox_add_devices() # fill the combobox
+        self.combobox_add_devices() # first time fill the combobox
 
         # Event triggered calls:
         self.refresh_checkbox.stateChanged.connect(self.refresh_combobox_device)
@@ -132,33 +143,33 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
     def combobox_add_devices(self):
         self.device_combobox.clear()
         self.device_combobox.addItem(u'0: DUMMY', userData=None)
+        
         # Create the EVT device list
         myevt = EventExchanger()
+        sleep(0.5) # without a delay, the list will not always be complete.
         try:
-            device_list = myevt.scan('EVT') # filter on EVT types
+            device_list = myevt.scan(_DEVICE_GROUP) # filter on allowed EVT types
             del myevt
         except:
             device_list = None
-
-        old_device_found = False
-        if device_list is not None:
+        
+        added_item_list = {}
+        if device_list:
             d_count = 1
             for d in device_list:
                 product_string = d['product_string']
                 serial_string = d['serial_number']
-                # add string to combobox:
-                self.device_combobox.addItem(str(d_count) + ": " + \
-                    product_string[15:] + " s/n: " + serial_string)
-                if self.var.device[3:28] in d['product_string']:
-                    old_device_found = True
+                composed_string = str(d_count) + ": " + \
+                    product_string[15:] + " s/n: " + serial_string
+                # add device string to combobox:
+                self.device_combobox.addItem(composed_string)
+                added_item_list[d_count] = composed_string
                 d_count += 1
                 if d_count > 9:
-                    # keep number of digits to 1
+                    # keep number of digits 1
                     break
-        else:
-            self.var.device = u'0: DUMMY'
-        
-        # Prevents hangup if the same device is not found after reopening the project.
-        # Any change in the hardware configuration could cause this.
-        if not old_device_found:
-            self.var.device = u'0: DUMMY'
+            # Prevents hangup if the old device is not found after reopening the project.
+            # Any change of the hardware configuration can cause this.
+            if not self.var.device in added_item_list.values():
+                self.var.device = u'0: DUMMY'
+
