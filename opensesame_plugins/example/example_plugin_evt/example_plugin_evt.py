@@ -87,7 +87,7 @@ class ExamplePluginEvt(Item):
                 open_devices[self.current_device].write_lines(0) # clear lines
             except:
                 self.var.device = u'0: DUMMY'
-                oslogger.warning("No device found! Switching to dummy.")
+                oslogger.warning("Device missing! Switching to dummy.")
 
     def run(self):
         """The run phase of the plug-in goes here."""
@@ -153,7 +153,7 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
         except:
             device_list = None
         
-        added_item_list = {}
+        added_items_list = {}
         if device_list:
             d_count = 1
             for d in device_list:
@@ -163,13 +163,13 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
                     product_string[15:] + " s/n: " + serial_string
                 # add device string to combobox:
                 self.device_combobox.addItem(composed_string)
-                added_item_list[d_count] = composed_string
+                added_items_list[d_count] = composed_string
                 d_count += 1
                 if d_count > 9:
                     # keep number of digits 1
                     break
-            # Prevents hangup if the old device is not found after reopening the project.
-            # Any change of the hardware configuration can cause this.
-            if not self.var.device in added_item_list.values():
-                self.var.device = u'0: DUMMY'
+        # Prevents hangup if the old device is not found after reopening the project.
+        # Any change of the hardware configuration can cause this.
+        if not self.var.device in added_items_list.values():
+            self.var.device = u'0: DUMMY'
 
