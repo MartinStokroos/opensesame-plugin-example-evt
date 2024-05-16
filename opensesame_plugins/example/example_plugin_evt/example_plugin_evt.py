@@ -41,7 +41,7 @@ class ExamplePluginEvt(Item):
         # in __init__.py. If you do not provide default values, the plug-in
         # will work, but the variables will be undefined when they are not
         # explicitly # set in the GUI.
-        self.var.device = u'0: DUMMY'
+        self.var.device = u'DUMMY'
         self.var.refresh = 'no'
         self.var.checkbox = 'yes'  # yes = checked, no = unchecked
         self.var.color = 'white'
@@ -57,22 +57,24 @@ class ExamplePluginEvt(Item):
         # Call the parent constructor.
         super().prepare()
 
-        if int(self.var.device[:1]) == 0:
-            oslogger.warning("Dummy prepare")
+        if self.var.device == u'DUMMY':
+            oslogger.warning("Hardware configuration could have changed! Dummy prepare...")
         else:
             # Create a shadow device list to find 'path' from the current selected device.
             # 'path' is an unique device ID.
             myevt = EventExchanger()
-            sleep(0.1) # without a delay, the list will not always be complete.
+            sleep(0.5) # without a delay, the list will not always be complete.
             try:
                 device_list = myevt.scan(_DEVICE_GROUP) # filter on allowed EVT types
                 del myevt
-                # oslogger.info("device list: {}".format(device_list))
+                oslogger.info("device list: {}".format(device_list))
             except:
-                oslogger.warning("Connecting EVT device failed!")
+                device_list = None
+                oslogger.warning("Connecting EVT-device failed!")
 
             try:
-                d_count = 1            
+                d_count = 1
+                self.current_device = 0     
                 for d in device_list:
                     if not d_count in open_devices: # skip if already open
                         # Dynamically load all EVT devices from the list
@@ -80,18 +82,23 @@ class ExamplePluginEvt(Item):
                         open_devices[d_count].attach_id(d['path']) # Get evt device handle
                         oslogger.info('Device successfully attached as:{} s/n:{}'.format(
                             d['product_string'], d['serial_number']))
+                        if self.var.device[:15] in d['product_string']:
+                            self.current_device = d_count
                     d_count += 1
                 oslogger.info('open devices: {}'.format(open_devices))
-                self.current_device = int(self.var.device[:1])
                 oslogger.info('Prepare - current device: {}'.format(self.current_device))
                 open_devices[self.current_device].write_lines(0) # clear lines
             except:
-                self.var.device = u'0: DUMMY'
+                self.var.device = u'DUMMY'
                 oslogger.warning("Device missing! Switching to dummy.")
+                exit()
+        # pass global var to experiment:
+        # var_name = "self.experiment.var.current_device_" + self.name
+        # exec(f"{var_name} = {self.var.device}") # ?
 
     def run(self):
         """The run phase of the plug-in goes here."""
-        if self.var.device == u'0: DUMMY':
+        if self.var.device == u'DUMMY':
             oslogger.info('Dummy run')
         else:
             # Do your thing with EVT here.
@@ -142,7 +149,7 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
         
     def combobox_add_devices(self):
         self.device_combobox.clear()
-        self.device_combobox.addItem(u'0: DUMMY', userData=None)
+        self.device_combobox.addItem(u'DUMMY', userData=None)
         
         # Create the EVT device list
         myevt = EventExchanger()
@@ -153,23 +160,22 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
         except:
             device_list = None
         
-        added_items_list = {}
-        if device_list:
-            d_count = 1
+        try:
+            previous_device_found = False
             for d in device_list:
                 product_string = d['product_string']
                 serial_string = d['serial_number']
-                composed_string = str(d_count) + ": " + \
-                    product_string[15:] + " s/n: " + serial_string
-                # add device string to combobox:
+                composed_string = product_string[15:] + " s/n: " + serial_string
+                # add device id to combobox:
                 self.device_combobox.addItem(composed_string)
-                added_items_list[d_count] = composed_string
-                d_count += 1
-                if d_count > 9:
-                    # keep number of digits 1
-                    break
-        # Prevents hangup if the old device is not found after reopening the project.
-        # Any change of the hardware configuration can cause this.
-        if not self.var.device in added_items_list.values():
-            self.var.device = u'0: DUMMY'
+                # previous used device present?
+                if self.var.device[:15] in product_string:
+                    self.var.device = composed_string
+                    previous_device_found = True       
+        except:
+            self.var.device = u'DUMMY'
+            oslogger.warning("No devices found! Switching to dummy.")
 
+        if previous_device_found is False:
+            self.var.device = u'DUMMY'
+            oslogger.warning("The hardware configuration has been changed since the last run! Switching to dummy.")
