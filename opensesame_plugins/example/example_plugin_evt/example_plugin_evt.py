@@ -92,9 +92,9 @@ class ExamplePluginEvt(Item):
                 self.var.device = u'DUMMY'
                 oslogger.warning("Device missing! Switching to dummy.")
                 exit()
-        # pass global var to experiment:
-        # var_name = "self.experiment.var.current_device_" + self.name
-        # exec(f"{var_name} = {self.var.device}") # ?
+        # pass device var to experiment as global:
+        var_name = "self.experiment.var.current_device_" + self.name
+        exec(f'{var_name} = "{self.var.device}"')
 
     def run(self):
         """The run phase of the plug-in goes here."""
