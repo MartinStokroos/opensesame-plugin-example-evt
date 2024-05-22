@@ -19,8 +19,8 @@ from pyevt import EventExchanger # pyevt 2.0
 # constant
 _DEVICE_GROUP = u'EVT'
 
-# global var
-open_devices = {} # Store open device handles.
+# global vars
+open_devices = {} # store device handles.
 
 
 class ExamplePluginEvt(Item):
@@ -59,39 +59,37 @@ class ExamplePluginEvt(Item):
 
         if self.var.device == u'DUMMY':
             oslogger.warning("Hardware configuration could have changed! Dummy prepare...")
-        else:
+        elif len(open_devices) is 0:
             # Create a shadow device list to find 'path' from the current selected device.
             # 'path' is an unique device ID.
-            myevt = EventExchanger()
+            temp_evt = EventExchanger()
             sleep(0.5) # without a delay, the list will not always be complete.
             try:
-                device_list = myevt.scan(_DEVICE_GROUP) # filter on allowed EVT types
-                del myevt
-                oslogger.info("device list: {}".format(device_list))
-            except:
-                device_list = None
-                oslogger.warning("Connecting EVT-device failed!")
-
-            try:
-                d_count = 1
-                self.current_device = 0     
+                device_list = temp_evt.scan(_DEVICE_GROUP) # filter on allowed EVT types
+                del temp_evt
+                # oslogger.info("device list: {}".format(device_list))
                 for d in device_list:
-                    if not d_count in open_devices: # skip if already open
-                        # Dynamically load all EVT devices from the list
-                        open_devices[d_count] = EventExchanger()
-                        open_devices[d_count].attach_id(d['path']) # Get evt device handle
-                        oslogger.info('Device successfully attached as:{} s/n:{}'.format(
+                    open_devices[d['product_string']] = EventExchanger()
+                    open_devices[d['product_string']].attach_id(d['path']) # Get evt device handle
+                    oslogger.info('Device successfully attached as:{} s/n:{}'.format(
                             d['product_string'], d['serial_number']))
-                        if self.var.device[:15] in d['product_string']:
-                            self.current_device = d_count
-                    d_count += 1
                 oslogger.info('open devices: {}'.format(open_devices))
-                oslogger.info('Prepare - current device: {}'.format(self.current_device))
-                open_devices[self.current_device].write_lines(0) # clear lines
             except:
+                oslogger.warning("Connecting EVT-device failed! Device set to dummy.")
                 self.var.device = u'DUMMY'
-                oslogger.warning("Device missing! Switching to dummy.")
-                exit()
+
+        # searching for selected device:
+        self.current_device = None
+        for dkey in open_devices:
+            if self.var.device[:15] in dkey:
+                self.current_device = dkey
+        if self.current_device is None:
+            oslogger.warning("EVT-device not found! Device set to dummy.")
+            self.var.device = u'DUMMY'
+        else:
+            oslogger.info('Prepare - current device: {}'.format(self.current_device))
+            open_devices[self.current_device].write_lines(0) # clear lines
+
         # pass device var to experiment as global:
         var_name = "self.experiment.var.current_device_" + self.name
         exec(f'{var_name} = "{self.var.device}"')
@@ -158,7 +156,7 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
             device_list = myevt.scan(_DEVICE_GROUP) # filter on allowed EVT types
             del myevt
         except:
-            device_list = None
+            device_list = {}
         
         try:
             previous_device_found = False
