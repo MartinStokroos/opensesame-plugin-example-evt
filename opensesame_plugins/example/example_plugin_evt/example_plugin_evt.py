@@ -80,7 +80,7 @@ class ExamplePluginEvt(Item):
                 self.var.device = u'DUMMY'
 
         # searching for selected device:
-        # oslogger.info('opened devices: {}'.format(open_devices))
+        oslogger.info('open devices: {}'.format(open_devices))
         self.current_device = None
         for dkey in open_devices:
             if self.var.device[:15] in dkey:
