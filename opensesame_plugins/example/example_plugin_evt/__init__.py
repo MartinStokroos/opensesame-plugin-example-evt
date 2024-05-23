@@ -22,7 +22,7 @@ controls = [
     }, {
         "type": "checkbox",
         "var": "close_device",
-        "label": "Close device (Use this at the end of the experiment.)",
+        "label": "Close EVT-device(s) (Use this at the end of the experiment.)",
         "name": "close_device_checkbox_widget",
         "tooltip": "Close device list checkbox"
     }, {

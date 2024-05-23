@@ -108,11 +108,12 @@ class ExamplePluginEvt(Item):
                 # open_devices[self.current_device].close()
                 # Not closing device, because more instances of this plugin might run.
         else:
-            try:
-                open_devices[self.current_device].close()
-                oslogger.info('Device: {} is closed!'.format(open_devices[self.current_device]))
-            except:
-                oslogger.warning('Device {} to close, not found!'.format(open_devices[self.current_device]))
+            for dkey in open_devices:
+                try:
+                    open_devices[dkey].close()
+                    oslogger.info('Device: {} is closed!'.format(open_devices[dkey]))
+                except:
+                    oslogger.warning('Device {} for closing not found!'.format(open_devices[dkey]))
 
 
 class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
@@ -141,7 +142,9 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
         # based on __init_.py.
         super().init_edit_widget()
         
-        if self.close_device == 'yes':
+        self.combobox_add_devices() # first time fill the combobox
+        if self.var.close_device == 'yes':
+            self.device_combobox_widget.setEnabled(False)
             self.refresh_checkbox_widget.setEnabled(False)
             self.checkbox_widget.setEnabled(False)
             self.color_widget.setEnabled(False)
@@ -152,8 +155,6 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
             self.slider_widget.setEnabled(False)
             self.editor_widget.setEnabled(False)
         
-        self.combobox_add_devices() # first time fill the combobox
-
         # Event triggered calls:
         self.close_device_checkbox_widget.stateChanged.connect(self.close_device)
         self.refresh_checkbox_widget.stateChanged.connect(self.refresh_combobox_device)
@@ -162,6 +163,7 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
     def close_device(self):
         if self.close_device_checkbox_widget.isChecked():
             self.var.close_device = 'yes'
+            self.device_combobox_widget.setEnabled(False)
             self.refresh_checkbox_widget.setEnabled(False)
             self.checkbox_widget.setEnabled(False)
             self.color_widget.setEnabled(False)
@@ -173,6 +175,7 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
             self.editor_widget.setEnabled(False)
         else:
             self.var.close_device = 'no'
+            self.device_combobox_widget.setEnabled(True)
             self.refresh_checkbox_widget.setEnabled(True)
             self.checkbox_widget.setEnabled(True)
             self.color_widget.setEnabled(True)
