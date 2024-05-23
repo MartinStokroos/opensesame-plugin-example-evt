@@ -42,7 +42,8 @@ class ExamplePluginEvt(Item):
         # will work, but the variables will be undefined when they are not
         # explicitly # set in the GUI.
         self.var.device = u'DUMMY'
-        self.var.refresh = 'no'
+        self.var.refresh_device_list = 'no'
+        self.var.close_device = 'no'
         self.var.checkbox = 'yes'  # yes = checked, no = unchecked
         self.var.color = 'white'
         self.var.option = 'Option 1'
@@ -75,12 +76,12 @@ class ExamplePluginEvt(Item):
                     open_devices[d['product_string'] + " s/n: " + d['serial_number']].attach_id(d['path'])
                     oslogger.info('Device successfully attached as:{} s/n:{}'.format(
                         d['product_string'], d['serial_number']))
+                oslogger.info('open device(s): {}'.format(open_devices))
             except:
                 oslogger.warning("Connecting EVT-device failed! Device set to dummy.")
                 self.var.device = u'DUMMY'
 
         # searching for selected device:
-        oslogger.info('open device(s): {}'.format(open_devices))
         self.current_device = None
         for dkey in open_devices:
             if self.var.device[:15] in dkey:
@@ -89,7 +90,7 @@ class ExamplePluginEvt(Item):
             oslogger.warning("EVT-device not found! Device set to dummy.")
             self.var.device = u'DUMMY'
         else:
-            oslogger.info('Prepare device: {}'.format(self.current_device))
+            oslogger.info('Prepare device: {}'.format(open_devices[self.current_device]))
             open_devices[self.current_device].write_lines(0) # clear lines
 
         # pass device var to experiment as global:
@@ -98,13 +99,20 @@ class ExamplePluginEvt(Item):
 
     def run(self):
         """The run phase of the plug-in goes here."""
-        if self.var.device == u'DUMMY':
-            oslogger.info('Dummy run')
+        if self.var.close_device == 'no':
+            if self.var.device == u'DUMMY':
+                oslogger.info('Dummy run')
+            else:
+                # Do your thing with EVT here.
+                open_devices[self.current_device].pulse_lines(170, 1000) # value=170, duration=1s, non-blocking!
+                # open_devices[self.current_device].close()
+                # Not closing device, because more instances of this plugin might run.
         else:
-            # Do your thing with EVT here.
-            open_devices[self.current_device].pulse_lines(170, 1000) # value=170, duration=1s, non-blocking!
-            # open_devices[self.current_device].close()
-            # Not closing device, because more instances of this plugin might run.
+            try:
+                open_devices[self.current_device].close()
+                oslogger.info('Device: {} is closed!'.format(open_devices[self.current_device]))
+            except:
+                oslogger.warning('Device {} to close, not found!'.format(open_devices[self.current_device]))
 
 
 class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
@@ -132,12 +140,48 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
         # First, call the parent constructor, which constructs the GUI controls
         # based on __init_.py.
         super().init_edit_widget()
-        self.refresh_checkbox.setChecked(False)
+        
+        if self.close_device == 'yes':
+            self.refresh_checkbox.setEnabled(False)
+            self.checkbox_widget.setEnabled(False)
+            self.color_widget.setEnabled(False)
+            self.combobox_widget.setEnabled(False)
+            self.filepool_widget.setEnabled(False)
+            self.line_edit_widget.setEnabled(False)
+            self.spinbox_widget.setEnabled(False)
+            self.slider_widget.setEnabled(False)
+            self.editor_widget.setEnabled(False)
+        
         self.combobox_add_devices() # first time fill the combobox
 
         # Event triggered calls:
+        self.close_device_checkbox.stateChanged.connect(self.close_device)
         self.refresh_checkbox.stateChanged.connect(self.refresh_combobox_device)
         self.device_combobox.currentIndexChanged.connect(self.update_combobox_device)
+
+    def close_device(self):
+        if self.close_device_checkbox.isChecked():
+            self.var.close_device = 'yes'
+            self.refresh_checkbox.setEnabled(False)
+            self.checkbox_widget.setEnabled(False)
+            self.color_widget.setEnabled(False)
+            self.combobox_widget.setEnabled(False)
+            self.filepool_widget.setEnabled(False)
+            self.line_edit_widget.setEnabled(False)
+            self.spinbox_widget.setEnabled(False)
+            self.slider_widget.setEnabled(False)
+            self.editor_widget.setEnabled(False)
+        else:
+            self.var.close_device = 'no'
+            self.refresh_checkbox.setEnabled(True)
+            self.checkbox_widget.setEnabled(True)
+            self.color_widget.setEnabled(True)
+            self.combobox_widget.setEnabled(True)
+            self.filepool_widget.setEnabled(True)
+            self.line_edit_widget.setEnabled(True)
+            self.spinbox_widget.setEnabled(True)
+            self.slider_widget.setEnabled(True)
+            self.editor_widget.setEnabled(True)
 
     def refresh_combobox_device(self):
         if self.refresh_checkbox.isChecked():

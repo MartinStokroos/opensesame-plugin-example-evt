@@ -15,11 +15,17 @@ controls = [
         "tooltip": "Select the desired EVT-device or DUMMY."
     }, {
         "type": "checkbox",
-        "var": "refresh",
+        "var": "refresh_device_list",
         "label": "Refresh device list",
         "name": "refresh_checkbox",
         "tooltip": "Refresch device list checkbox"
-    }, {   
+    }, {
+        "type": "checkbox",
+        "var": "close_device",
+        "label": "Close device",
+        "name": "close_device_checkbox",
+        "tooltip": "Close device list checkbox"
+    }, {
         "type": "checkbox",
         "var": "checkbox",
         "label": "Example checkbox",
