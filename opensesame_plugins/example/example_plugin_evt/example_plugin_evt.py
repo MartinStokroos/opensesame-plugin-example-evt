@@ -142,7 +142,7 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
         super().init_edit_widget()
         
         if self.close_device == 'yes':
-            self.refresh_checkbox.setEnabled(False)
+            self.refresh_checkbox_widget.setEnabled(False)
             self.checkbox_widget.setEnabled(False)
             self.color_widget.setEnabled(False)
             self.combobox_widget.setEnabled(False)
@@ -155,14 +155,14 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
         self.combobox_add_devices() # first time fill the combobox
 
         # Event triggered calls:
-        self.close_device_checkbox.stateChanged.connect(self.close_device)
-        self.refresh_checkbox.stateChanged.connect(self.refresh_combobox_device)
-        self.device_combobox.currentIndexChanged.connect(self.update_combobox_device)
+        self.close_device_checkbox_widget.stateChanged.connect(self.close_device)
+        self.refresh_checkbox_widget.stateChanged.connect(self.refresh_combobox_device)
+        self.device_combobox_widget.currentIndexChanged.connect(self.update_combobox_device)
 
     def close_device(self):
-        if self.close_device_checkbox.isChecked():
+        if self.close_device_checkbox_widget.isChecked():
             self.var.close_device = 'yes'
-            self.refresh_checkbox.setEnabled(False)
+            self.refresh_checkbox_widget.setEnabled(False)
             self.checkbox_widget.setEnabled(False)
             self.color_widget.setEnabled(False)
             self.combobox_widget.setEnabled(False)
@@ -173,7 +173,7 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
             self.editor_widget.setEnabled(False)
         else:
             self.var.close_device = 'no'
-            self.refresh_checkbox.setEnabled(True)
+            self.refresh_checkbox_widget.setEnabled(True)
             self.checkbox_widget.setEnabled(True)
             self.color_widget.setEnabled(True)
             self.combobox_widget.setEnabled(True)
@@ -184,16 +184,16 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
             self.editor_widget.setEnabled(True)
 
     def refresh_combobox_device(self):
-        if self.refresh_checkbox.isChecked():
+        if self.refresh_checkbox_widget.isChecked():
             # renew list:
             self.combobox_add_devices()
 
     def update_combobox_device(self):
-        self.refresh_checkbox.setChecked(False)
+        self.refresh_checkbox_widget.setChecked(False)
         
     def combobox_add_devices(self):
-        self.device_combobox.clear()
-        self.device_combobox.addItem(u'DUMMY', userData=None)
+        self.device_combobox_widget.clear()
+        self.device_combobox_widget.addItem(u'DUMMY', userData=None)
         
         # Create the EVT device list
         sleep(1) # delay after possible init of a previous instance of this plugin. 
@@ -211,7 +211,7 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
                 serial_string = d['serial_number']
                 composed_string = product_string[15:] + " s/n: " + serial_string
                 # add device id to combobox:
-                self.device_combobox.addItem(composed_string)
+                self.device_combobox_widget.addItem(composed_string)
                 # previous used device present?
                 if self.var.device[:15] in product_string:
                     self.var.device = composed_string

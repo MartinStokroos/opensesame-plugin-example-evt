@@ -11,19 +11,19 @@ controls = [
         "options": [
             "DUMMY"
         ],
-        "name": "device_combobox",
+        "name": "device_combobox_widget",
         "tooltip": "Select the desired EVT-device or DUMMY."
     }, {
         "type": "checkbox",
         "var": "refresh_device_list",
         "label": "Refresh device list",
-        "name": "refresh_checkbox",
+        "name": "refresh_checkbox_widget",
         "tooltip": "Refresch device list checkbox"
     }, {
         "type": "checkbox",
         "var": "close_device",
-        "label": "Close device",
-        "name": "close_device_checkbox",
+        "label": "Close device (Use this at the end of the experiment.)",
+        "name": "close_device_checkbox_widget",
         "tooltip": "Close device list checkbox"
     }, {
         "type": "checkbox",
