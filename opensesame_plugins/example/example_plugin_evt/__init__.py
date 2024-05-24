@@ -21,12 +21,6 @@ controls = [
         "tooltip": "Refresch device list checkbox"
     }, {
         "type": "checkbox",
-        "var": "close_device",
-        "label": "Close EVT-device(s) (Use this at the end of the experiment.)",
-        "name": "close_device_checkbox_widget",
-        "tooltip": "Close device list checkbox"
-    }, {
-        "type": "checkbox",
         "var": "checkbox",
         "label": "Example checkbox",
         "name": "checkbox_widget",
@@ -89,5 +83,11 @@ controls = [
         "name": "editor_widget",
         "syntax": True,
         "tooltip": "An example editor widget"
+    }, {
+        "type": "checkbox",
+        "var": "close_device",
+        "label": "Auto close EVT-device(s). (Use this for the latter instance of the plugin or with a single instance of the plugin.)",
+        "name": "close_device_checkbox_widget",
+        "tooltip": "Close device list checkbox"
     }
 ]

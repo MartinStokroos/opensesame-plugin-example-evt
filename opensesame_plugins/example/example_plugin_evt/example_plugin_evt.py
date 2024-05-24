@@ -77,7 +77,7 @@ class ExamplePluginEvt(Item):
                     open_devices[composed_string].attach_id(d['path'])
                     oslogger.info('Device successfully attached as: {} s/n: {}'.format(
                         d['product_string'], d['serial_number']))
-                    oslogger.info('        ...  and with device ID:{}'.format(open_devices[composed_string]))
+                    oslogger.info('        ...  and with device ID: {}'.format(open_devices[composed_string]))
             except:
                 oslogger.warning("Connecting EVT-device failed! Device set to dummy.")
                 self.var.device = u'DUMMY'
@@ -100,14 +100,13 @@ class ExamplePluginEvt(Item):
 
     def run(self):
         """The run phase of the plug-in goes here."""
-        if self.var.close_device == 'no':
-            if self.var.device == u'DUMMY':
-                oslogger.info('Dummy run')
-            else:
-                # Do your thing with EVT here.
-                open_devices[self.current_device].pulse_lines(170, 1000) # value=170, duration=1s, non-blocking!
-
+        if self.var.device == u'DUMMY':
+            oslogger.info('Dummy run')
         else:
+            # Do your thing with EVT here.
+            open_devices[self.current_device].pulse_lines(170, 1000) # value=170, duration=1s, non-blocking!
+
+        if self.var.close_device == 'yes':
             for dkey in open_devices:
                 try:
                     open_devices[dkey].close()
@@ -144,18 +143,6 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
         
         self.combobox_add_devices() # first time fill the combobox
 
-        if self.var.close_device == 'yes':
-            self.device_combobox_widget.setEnabled(False)
-            self.refresh_checkbox_widget.setEnabled(False)
-            self.checkbox_widget.setEnabled(False)
-            self.color_widget.setEnabled(False)
-            self.combobox_widget.setEnabled(False)
-            self.filepool_widget.setEnabled(False)
-            self.line_edit_widget.setEnabled(False)
-            self.spinbox_widget.setEnabled(False)
-            self.slider_widget.setEnabled(False)
-            self.editor_widget.setEnabled(False)
-        
         # Event triggered calls:
         self.close_device_checkbox_widget.stateChanged.connect(self.close_device)
         self.refresh_checkbox_widget.stateChanged.connect(self.refresh_combobox_device)
@@ -164,28 +151,8 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
     def close_device(self):
         if self.close_device_checkbox_widget.isChecked():
             self.var.close_device = 'yes'
-            self.device_combobox_widget.setEnabled(False)
-            self.refresh_checkbox_widget.setEnabled(False)
-            self.checkbox_widget.setEnabled(False)
-            self.color_widget.setEnabled(False)
-            self.combobox_widget.setEnabled(False)
-            self.filepool_widget.setEnabled(False)
-            self.line_edit_widget.setEnabled(False)
-            self.spinbox_widget.setEnabled(False)
-            self.slider_widget.setEnabled(False)
-            self.editor_widget.setEnabled(False)
         else:
             self.var.close_device = 'no'
-            self.device_combobox_widget.setEnabled(True)
-            self.refresh_checkbox_widget.setEnabled(True)
-            self.checkbox_widget.setEnabled(True)
-            self.color_widget.setEnabled(True)
-            self.combobox_widget.setEnabled(True)
-            self.filepool_widget.setEnabled(True)
-            self.line_edit_widget.setEnabled(True)
-            self.spinbox_widget.setEnabled(True)
-            self.slider_widget.setEnabled(True)
-            self.editor_widget.setEnabled(True)
 
     def refresh_combobox_device(self):
         if self.refresh_checkbox_widget.isChecked():
