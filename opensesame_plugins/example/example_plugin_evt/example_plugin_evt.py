@@ -71,12 +71,13 @@ class ExamplePluginEvt(Item):
                 # oslogger.info("device list: {}".format(device_list))
                 for d in device_list:
                     sleep(1) # without a delays, the device will not always be there.
-                    open_devices[d['product_string'] + " s/n: " + d['serial_number']] = EventExchanger()
+                    composed_string = d['product_string'] + " s/n: " + d['serial_number']
+                    open_devices[composed_string] = EventExchanger()
                     # Get evt device handle:
-                    open_devices[d['product_string'] + " s/n: " + d['serial_number']].attach_id(d['path'])
-                    oslogger.info('Device successfully attached as:{} s/n:{}'.format(
+                    open_devices[composed_string].attach_id(d['path'])
+                    oslogger.info('Device successfully attached as: {} s/n: {}'.format(
                         d['product_string'], d['serial_number']))
-                oslogger.info('open device(s): {}'.format(open_devices))
+                    oslogger.info('        ...  and with device ID:{}'.format(open_devices[composed_string]))
             except:
                 oslogger.warning("Connecting EVT-device failed! Device set to dummy.")
                 self.var.device = u'DUMMY'
@@ -111,7 +112,7 @@ class ExamplePluginEvt(Item):
             for dkey in open_devices:
                 try:
                     open_devices[dkey].close()
-                    oslogger.info('Device: {} is closed!'.format(open_devices[dkey]))
+                    oslogger.info('Device: {} successfully closed!'.format(open_devices[dkey]))
                 except:
                     oslogger.warning('Device {} for closing not found!'.format(open_devices[dkey]))
 
