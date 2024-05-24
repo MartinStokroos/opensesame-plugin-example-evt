@@ -43,7 +43,6 @@ class ExamplePluginEvt(Item):
         # explicitly # set in the GUI.
         self.var.device = u'DUMMY'
         self.var.refresh_device_list = 'no'
-        self.var.close_device = 'no'
         self.var.checkbox = 'yes'  # yes = checked, no = unchecked
         self.var.color = 'white'
         self.var.option = 'Option 1'
@@ -52,6 +51,7 @@ class ExamplePluginEvt(Item):
         self.var.spinbox_value = 1
         self.var.slider_value = 1
         self.var.script = 'print(10)'
+        self.var.close_device = 'no'
 
     def prepare(self):
         """The preparation phase of the plug-in goes here."""
@@ -91,7 +91,7 @@ class ExamplePluginEvt(Item):
             oslogger.warning("EVT-device not found! Device set to dummy.")
             self.var.device = u'DUMMY'
         else:
-            oslogger.info('Prepare device: {}'.format(open_devices[self.current_device]))
+            oslogger.info('Preparing device: {}'.format(open_devices[self.current_device]))
             open_devices[self.current_device].write_lines(0) # clear lines
 
         # pass device var to experiment as global:
@@ -148,12 +148,6 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
         self.refresh_checkbox_widget.stateChanged.connect(self.refresh_combobox_device)
         self.device_combobox_widget.currentIndexChanged.connect(self.update_combobox_device)
 
-    def close_device(self):
-        if self.close_device_checkbox_widget.isChecked():
-            self.var.close_device = 'yes'
-        else:
-            self.var.close_device = 'no'
-
     def refresh_combobox_device(self):
         if self.refresh_checkbox_widget.isChecked():
             # renew list:
@@ -194,3 +188,9 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
         if previous_device_found is False:
             self.var.device = u'DUMMY'
             oslogger.warning("The hardware configuration has been changed since the last run! Switching to dummy.")
+            
+    def close_device(self):
+        if self.close_device_checkbox_widget.isChecked():
+            self.var.close_device = 'yes'
+        else:
+            self.var.close_device = 'no'
