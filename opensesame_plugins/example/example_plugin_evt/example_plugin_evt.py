@@ -106,8 +106,7 @@ class ExamplePluginEvt(Item):
             else:
                 # Do your thing with EVT here.
                 open_devices[self.current_device].pulse_lines(170, 1000) # value=170, duration=1s, non-blocking!
-                # open_devices[self.current_device].close()
-                # Not closing device, because more instances of this plugin might run.
+
         else:
             for dkey in open_devices:
                 try:
@@ -144,6 +143,7 @@ class QtExamplePluginEvt(ExamplePluginEvt, QtAutoPlugin):
         super().init_edit_widget()
         
         self.combobox_add_devices() # first time fill the combobox
+
         if self.var.close_device == 'yes':
             self.device_combobox_widget.setEnabled(False)
             self.refresh_checkbox_widget.setEnabled(False)
